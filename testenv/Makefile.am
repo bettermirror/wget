@@ -70,7 +70,9 @@ DEFAULT_TESTS = \
   Test-recursive-include.py                       \
   Test-recursive-redirect.py                      \
   Test-redirect.py                                \
+  Test-redirect-auth-cookie.py                    \
   Test-redirect-crash.py                          \
+  Test-redirect-same-host-keep-auth-cookie.py     \
   Test--rejected-log.py                           \
   Test-reserved-chars.py                          \
   Test--spider-r.py                               \

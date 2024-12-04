@@ -874,7 +874,7 @@ retrieve_url (struct url * orig_parsed, const char *origurl, char **file,
 {
   uerr_t result;
   char *url;
-  bool location_changed;
+  bool location_changed = false;
   bool iri_fallbacked = 0;
   int dummy;
   char *mynewloc, *proxy;
@@ -971,7 +971,7 @@ retrieve_url (struct url * orig_parsed, const char *origurl, char **file,
 	}
 #endif
       result = http_loop (u, orig_parsed, &mynewloc, &local_file, refurl, dt,
-                          proxy_url, iri);
+                          proxy_url, iri, location_changed);
     }
   else if (u->scheme == SCHEME_FTP
 #ifdef HAVE_SSL
@@ -1011,8 +1011,7 @@ retrieve_url (struct url * orig_parsed, const char *origurl, char **file,
       proxy_url = NULL;
     }
 
-  location_changed = (result == NEWLOCATION || result == NEWLOCATION_KEEP_POST);
-  if (location_changed)
+  if (result == NEWLOCATION || result == NEWLOCATION_KEEP_POST)
     {
       char *construced_newloc;
       struct url *newloc_parsed;
@@ -1084,6 +1083,12 @@ retrieve_url (struct url * orig_parsed, const char *origurl, char **file,
         {
           url_free (u);
         }
+      /* location_changed is true only when redirecting to a different
+         server (different hostname or port), so that Authorization and
+         Cookie headers are preserved for same-server redirects. */
+      location_changed = (strcasecmp (u->host, newloc_parsed->host) != 0
+                          || u->port != newloc_parsed->port);
+
       u = newloc_parsed;
 
       /* If we're being redirected from POST, and we received a

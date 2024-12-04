@@ -3149,6 +3149,17 @@ fail:
 }
 #endif /* HAVE_METALINK */
 
+/*
+ * Check if the corresponding header line should not
+ * be sent after a redirect
+ */
+static bool
+unredirectable_headerline(const char *line)
+{
+  return c_strncasecmp(line, "Authorization:", 14) == 0
+	  || c_strncasecmp(line, "Cookie:", 7) == 0;
+}
+
 /* Retrieve a document through HTTP protocol.  It recognizes status
    code, and correctly handles redirections.  It closes the network
    socket.  If it receives an error from the functions below it, it
@@ -3161,7 +3172,7 @@ fail:
    server, and u->url will be requested.  */
 static uerr_t
 gethttp (const struct url *u, struct url *original_url, struct http_stat *hs,
-         int *dt, struct url *proxy, struct iri *iri, int count)
+         int *dt, struct url *proxy, struct iri *iri, int count, bool location_changed)
 {
   struct request *req = NULL;
 
@@ -3303,9 +3314,13 @@ gethttp (const struct url *u, struct url *original_url, struct http_stat *hs,
   /* Add the user headers. */
   if (opt.user_headers)
     {
-      int i;
-      for (i = 0; opt.user_headers[i]; i++)
-        request_set_user_header (req, opt.user_headers[i]);
+      for (int i = 0; opt.user_headers[i]; i++)
+        {
+          if (location_changed
+              && (opt.trustservernames || unredirectable_headerline(opt.user_headers[i])))
+            continue;
+          request_set_user_header (req, opt.user_headers[i]);
+        }
     }
 
   proxyauth = NULL;
@@ -4230,7 +4245,7 @@ check_retry_on_http_error (const int statcode)
 uerr_t
 http_loop (const struct url *u, struct url *original_url, char **newloc,
            char **local_file, const char *referer, int *dt, struct url *proxy,
-           struct iri *iri)
+           struct iri *iri, bool location_changed)
 {
   int count;
   bool got_head = false;         /* used for time-stamping and filename detection */
@@ -4417,7 +4432,7 @@ http_loop (const struct url *u, struct url *original_url, char **newloc,
         *dt &= ~SEND_NOCACHE;
 
       /* Try fetching the document, or at least its head.  */
-      err = gethttp (u, original_url, &hstat, dt, proxy, iri, count);
+      err = gethttp (u, original_url, &hstat, dt, proxy, iri, count, location_changed);
 
       /* Time?  */
       tms = datetime_str (time (NULL));
