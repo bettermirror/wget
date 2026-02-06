@@ -1044,7 +1044,12 @@ ssl_check_certificate (int fd, const char *host)
   if (opt.check_cert == CHECK_CERT_QUIET && pinsuccess)
     return success;
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+  cert = SSL_get1_peer_certificate (conn);
+#else
+  /* Deprecated since 3.0.0 */
   cert = SSL_get_peer_certificate (conn);
+#endif
   if (!cert)
     {
       logprintf (LOG_NOTQUIET, _("%s: No certificate presented by %s.\n"),
