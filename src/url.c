@@ -618,6 +618,9 @@ maybe_prepend_scheme (const char *url)
     return NULL;
 
   const char *p = strchr (url, ':');
+  const char *slash = strchr (url, '/');
+  if (p && slash && p > slash)
+    p = NULL;  /* colon is in the path, not a port separator */
   if (p == url)
     return NULL;
 
