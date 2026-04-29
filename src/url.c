@@ -596,12 +596,18 @@ parse_credentials (const char *beg, const char *end, char **user, char **passwd)
 
 static bool is_valid_port(const char *p)
 {
-  unsigned port = (unsigned) atoi (p);
-  if (port == 0 || port > 65535)
+  char *end;
+  unsigned long port;
+
+  if (!c_isdigit(*p))
     return false;
 
-  int digits = strspn (p, "0123456789");
-  return digits && (p[digits] == '/' || p[digits] == '\0');
+  errno = 0;
+  port = strtoul(p, &end, 10);
+  if (errno != 0 || end == p || port == 0 || port > 65535)
+    return false;
+
+  return (*end == '/' || *end == '\0');
 }
 
 /* Prepend "http://" to url if scheme is missing, otherwise return NULL. */
