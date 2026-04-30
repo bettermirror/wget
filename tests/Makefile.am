@@ -130,7 +130,8 @@ PX_TESTS = \
              Test-https-weboftrust.px \
              Test-https-clientcert.px \
              Test-https-crl.px \
-             Test-https-badcerts.px
+             Test-https-badcerts.px \
+             Test-https-key-usage.px
 
 EXTRA_DIST = FTPServer.pm FTPTest.pm HTTPServer.pm HTTPTest.pm \
              SSLTest.pm SSLServer.pm \
