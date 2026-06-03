@@ -180,6 +180,14 @@ do_conversion (const char *tocode, const char *fromcode, char const *in_org, siz
                       _("Incomplete or invalid multibyte sequence encountered\n"));
 
           invalid++;
+          if (outlen == 0)
+            {
+              char *new = xrealloc (s, len * 2 + 1);
+              *out = new + (*out - s);
+              s = new;
+              outlen += len;
+              len *= 2;
+            }
           **out = *in;
           in++;
           inlen--;
