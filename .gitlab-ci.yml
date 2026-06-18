@@ -29,13 +29,15 @@ after_script:
 variables:
   BUILD_IMAGES_PROJECT: gnuwget/build-images
   CI_BASE_PATH: $CI_REGISTRY/$BUILD_IMAGES_PROJECT/wget
-  DEBIAN_OLDSTABLE_BUILD: buildenv-debian-oldstable
-  DEBIAN_TESTING_BUILD: buildenv-debian-testing
-  DEBIAN_STABLE_BUILD: buildenv-debian-stable
+  BOOTSTRAP_BUILD: buildenv-wget-bootstrap
+  DEBIAN_OLDSTABLE_BUILD: buildenv-wget-debian-oldstable
+  DEBIAN_TESTING_BUILD: buildenv-wget-debian-testing
+  DEBIAN_STABLE_BUILD: buildenv-wget-debian-stable
   CENTOS_OLDLTS_BUILD: buildenv-centos7
-  FEDORA_BUILD: buildenv-fedora
-  MINGW_BUILD: buildenv-mingw
-  ARCH_BUILD: buildenv-arch
+  FEDORA_BUILD: buildenv-wget-fedora
+  MINGW_BUILD: buildenv-wget-mingw
+  ARCH_BUILD: buildenv-wget-archlinux
+  MINIMAL_BUILD: buildenv-wget-minimal
   GET_SOURCES_ATTEMPTS: "3"
   GIT_DEPTH: "5"
   CONFIGURE_BASE_FLAGS: --enable-assert --cache-file cache/config.cache
@@ -45,6 +47,7 @@ CommitCheck:
   stage: test-from-git
   image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$DEBIAN_TESTING_BUILD
   script:
+    - apt-get install -y git
     - ./contrib/commit-check
   allow_failure: true
   cache:
@@ -55,7 +58,7 @@ CommitCheck:
 # Create the tarball in a separate build directory (VPATH).
 Build-Tarball:
     stage: test-from-git
-    image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$DEBIAN_TESTING_BUILD
+    image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$BOOTSTRAP_BUILD
     script:
         - export CFLAGS=$CFLAGS_DEFAULT
         - ./bootstrap
@@ -113,7 +116,7 @@ Valgrind:
 
 Minimal:
     stage: test-from-tarball
-    image: $CI_BASE_PATH/debian:testing-minimal
+    image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$MINIMAL_BUILD
     variables:
         GIT_STRATEGY: none
     script:
@@ -283,10 +286,9 @@ Sanitizers:
         - export CFLAGS=$CFLAGS_DEFAULT
         - tar xvf wget-*.gz
         - cd wget-*/
-#       - export CFLAGS="$CFLAGS_DEFAULT -Werror"
-        - export CFLAGS="$CFLAGS_DEFAULT"
+        - export CFLAGS="$CFLAGS_DEFAULT -fno-sanitize=function -fno-omit-frame-pointer -fno-optimize-sibling-calls"
         - export CC="ccache clang"
-        - export UBSAN_OPTIONS=print_stacktrace=1
+        - export UBSAN_OPTIONS=print_stacktrace=1::report_error_type=1
         - export ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer
 #       - export LSAN_OPTIONS=suppressions="$PWD/tests/clang-asan-suppressions"
         - ./configure $CONFIGURE_BASE_FLAGS --cache-file ../cache/config.cache
@@ -348,7 +350,6 @@ CoverageReports:
         - make -C doc html
         - make -j$(nproc) fuzz-coverage
         - mv lcov ../fuzz-coverage
-        - make dist
     dependencies:
         - Build-Tarball
     needs: ["Build-Tarball"]
