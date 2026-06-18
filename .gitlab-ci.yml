@@ -96,7 +96,7 @@ Valgrind:
         GIT_STRATEGY: none
     script:
         - export CFLAGS=$CFLAGS_DEFAULT
-        - tar xvf wget-*.gz
+        - tar xf wget-*.gz
         - cd wget-*/
         - ./configure $CONFIGURE_BASE_FLAGS --cache-file ../cache/config.cache
         - make check-valgrind
@@ -121,7 +121,7 @@ Minimal:
         GIT_STRATEGY: none
     script:
         - export CFLAGS=$CFLAGS_DEFAULT
-        - tar xvf wget-*.gz
+        - tar xf wget-*.gz
         - cd wget-*/
         - ./configure $CONFIGURE_BASE_FLAGS --cache-file ../cache/config.cache
           --disable-nls --without-ssl --enable-ipv6 --without-zlib --without-libiconv-prefix
@@ -149,7 +149,7 @@ Debian-OldStable:
         GIT_STRATEGY: none
     script:
         - export CFLAGS=$CFLAGS_DEFAULT
-        - tar xvf wget-*.gz
+        - tar xf wget-*.gz
         - cd wget-*/
         - ./configure $CONFIGURE_BASE_FLAGS --cache-file ../cache/config.cache
         - make
@@ -175,7 +175,7 @@ Debian-Stable:
         GIT_STRATEGY: none
     script:
         - export CFLAGS=$CFLAGS_DEFAULT
-        - tar xvf wget-*.gz
+        - tar xf wget-*.gz
         - cd wget-*/
         - ./configure $CONFIGURE_BASE_FLAGS --cache-file ../cache/config.cache
         - make -j$(nproc) check
@@ -200,7 +200,7 @@ CentOS-OldLTS:
         GIT_STRATEGY: none
     script:
         - export CFLAGS=$CFLAGS_DEFAULT
-        - tar xvf wget-*.gz
+        - tar xf wget-*.gz
         - cd wget-*/
         - ./configure $CONFIGURE_BASE_FLAGS --cache-file ../cache/config.cache
         - make -j$(nproc)
@@ -228,7 +228,7 @@ TLS/OpenSSL:
         GIT_STRATEGY: none
     script:
         - export CFLAGS=$CFLAGS_DEFAULT
-        - tar xvf wget-*.gz
+        - tar xf wget-*.gz
         - cd wget-*/
         - echo "127.0.0.1 wgettestingserver" >>/etc/hosts
         - cat /etc/hosts
@@ -256,7 +256,7 @@ TLS/GnuTLS:
         GIT_STRATEGY: none
     script:
         - export CFLAGS=$CFLAGS_DEFAULT
-        - tar xvf wget-*.gz
+        - tar xf wget-*.gz
         - cd wget-*/
         - echo "127.0.0.1 wgettestingserver" >>/etc/hosts
         - cat /etc/hosts
@@ -284,7 +284,7 @@ Sanitizers:
         GIT_STRATEGY: none
     script:
         - export CFLAGS=$CFLAGS_DEFAULT
-        - tar xvf wget-*.gz
+        - tar xf wget-*.gz
         - cd wget-*/
         - export CFLAGS="$CFLAGS_DEFAULT -fno-sanitize=function -fno-omit-frame-pointer -fno-optimize-sibling-calls"
         - export CC="ccache clang"
@@ -315,7 +315,7 @@ Scan-Build:
         GIT_STRATEGY: none
     script:
         - export CFLAGS=$CFLAGS_DEFAULT
-        - tar xvf wget-*.gz
+        - tar xf wget-*.gz
         - cd wget-*/
         - scan-build ./configure $CONFIGURE_BASE_FLAGS --cache-file ../cache/config.cache
         - make -C lib -j$(nproc)
@@ -342,7 +342,7 @@ CoverageReports:
         GIT_STRATEGY: none
     script:
         - export CFLAGS=$CFLAGS_DEFAULT
-        - tar xvf wget-*.gz
+        - tar xf wget-*.gz
         - cd wget-*/
         - ./configure $CONFIGURE_BASE_FLAGS --cache-file ../cache/config.cache
         - make -j$(nproc) check-coverage
@@ -368,7 +368,7 @@ MinGW64:
         GIT_STRATEGY: none
     script:
         - export CFLAGS=$CFLAGS_DEFAULT
-        - tar xvf wget-*.gz
+        - tar xf wget-*.gz
         - cd wget-*/
         - mount -t binfmt_misc binfmt_misc /proc/sys/fs/binfmt_misc
         - echo ':DOSWin:M::MZ::/usr/bin/wine:' > /proc/sys/fs/binfmt_misc/register
