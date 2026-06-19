@@ -45,15 +45,18 @@ variables:
 
 CommitCheck:
   stage: test-from-git
-  image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$DEBIAN_TESTING_BUILD
+  image: alpine:latest
+  before_script:
+    - /bin/true
   script:
-    - apt-get install -y git
-    - ./contrib/commit-check
+    - apk add git
+    - contrib/commit-check
+  after_script:
+    - /bin/true
   allow_failure: true
   cache:
       paths:
       policy: push
-
 
 # Create the tarball in a separate build directory (VPATH).
 Build-Tarball:
