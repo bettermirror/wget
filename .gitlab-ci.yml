@@ -40,7 +40,7 @@ variables:
   MINIMAL_BUILD: buildenv-wget-minimal
   GET_SOURCES_ATTEMPTS: "3"
   GIT_DEPTH: "5"
-  CONFIGURE_BASE_FLAGS: --enable-assert --cache-file cache/config.cache
+  CONFIGURE_BASE_FLAGS: --enable-assert --cache-file cache/config.cache --enable-ntlm
   CFLAGS_DEFAULT: -O0 -g -ggdb3
 
 CommitCheck:

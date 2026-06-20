@@ -188,9 +188,9 @@ AS_IF([test "x$ENABLE_DIGEST" = xyes],
 
 dnl NTLM: Support for HTTP NTLM Authentication
 AC_ARG_ENABLE([ntlm],
-  [AS_HELP_STRING([--disable-ntlm], [disable support for NTLM authorization])],
+  [AS_HELP_STRING([--enable-ntlm], [enable support for NTLM authorization])],
   [ENABLE_NTLM=$enableval],
-  [ENABLE_NTLM=auto]
+  [ENABLE_NTLM=no]
 )
 
 
