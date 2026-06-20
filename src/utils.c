@@ -1601,7 +1601,7 @@ get_grouping_data (const char **sep, const char **grouping)
   if (!initialized)
     {
       /* Get the grouping info from the locale. */
-      struct lconv *lconv = localeconv ();
+      const struct lconv *lconv = localeconv ();
       cached_sep = lconv->thousands_sep;
       cached_grouping = lconv->grouping;
 #if ! USE_NLS_PROGRESS_BAR
