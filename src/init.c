@@ -461,7 +461,8 @@ defaults (void)
 #endif
 
   /* The default for file name restriction defaults to the OS type. */
-#if defined(WINDOWS) || defined(MSDOS) || defined(__CYGWIN__)
+#if defined(WINDOWS) || defined(MSDOS) || defined(__CYGWIN__) \
+    || defined(__OS2__)
   opt.restrict_files_os = restrict_windows;
 #elif defined(__VMS)
   opt.restrict_files_os = restrict_vms;
