@@ -33,7 +33,7 @@ variables:
   DEBIAN_OLDSTABLE_BUILD: buildenv-wget-debian-oldstable
   DEBIAN_TESTING_BUILD: buildenv-wget-debian-testing
   DEBIAN_STABLE_BUILD: buildenv-wget-debian-stable
-  CENTOS_OLDLTS_BUILD: buildenv-centos7
+  CENTOS9_BUILD: buildenv-wget-centos9
   FEDORA_BUILD: buildenv-wget-fedora
   MINGW_BUILD: buildenv-wget-mingw
   ARCH_BUILD: buildenv-wget-archlinux
@@ -196,9 +196,9 @@ Debian-Stable:
             - wget-*/tests/*.log
             - wget-*/testenv/*.log
 
-CentOS-OldLTS:
+CentOS9:
     stage: test-from-tarball
-    image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$CENTOS_OLDLTS_BUILD
+    image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$CENTOS9_BUILD
     variables:
         GIT_STRATEGY: none
     script:
