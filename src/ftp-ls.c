@@ -1027,8 +1027,14 @@ ftp_parse_ls_fp (FILE *fp, const enum stype system_type)
     case ST_WINNT:
       {
         /* Detect whether the listing is simulating the UNIX format */
-        int   c = fgetc(fp);
-        rewind(fp);
+        int c = fgetc(fp);
+
+        if (fseek(fp, 0L, SEEK_SET) == -1)
+          {
+            logprintf (LOG_NOTQUIET, "failed to rewind: %s\n",
+                       strerror (errno));
+            return NULL;
+          }
 
         /* If the first character of the file is '0'-'9', it's WINNT
            format. */
