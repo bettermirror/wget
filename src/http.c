@@ -2575,7 +2575,13 @@ open_output_stream (struct http_stat *hs, int count, FILE **fp)
 #else /* def __VMS */
           if (hs->temporary)
             {
-              *fp = fdopen (open (hs->local_file, O_BINARY | O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR), "wb");
+              int fd = open (hs->local_file, O_BINARY | O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+              if (fd == -1)
+                {
+                  logprintf (LOG_NOTQUIET, "%s: %s\n", hs->local_file, strerror (errno));
+                  return FOPENERR;
+                }
+              *fp = fdopen (fd, "wb");
             }
           else
             {
