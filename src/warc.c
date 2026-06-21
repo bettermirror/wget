@@ -309,9 +309,9 @@ warc_write_block_from_file (FILE *data_in)
     warc_write_ok = false;
 
   /* Copy the data in the file to the WARC record. */
-  while (warc_write_ok && (s = fread (buffer, 1, BUFSIZ, data_in)) > 0)
+  while (warc_write_ok && !feof (data_in) && (s = fread (buffer, 1, BUFSIZ, data_in)) > 0)
     {
-      if (warc_write_buffer (buffer, s) < s)
+      if (ferror (data_in) || warc_write_buffer (buffer, s) < s)
         warc_write_ok = false;
     }
 
