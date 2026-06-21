@@ -1334,19 +1334,21 @@ struct growable {
   DO_REALLOC (G_->base, G_->size, G_->tail + append_size, char);        \
 } while (0)
 
-/* Return the tail position of the string. */
-#define TAIL(r) ((r)->base + (r)->tail)
-
 /* Move the tail position by APPEND_COUNT characters. */
 #define TAIL_INCR(r, append_count) ((r)->tail += append_count)
 
+static inline char *
+tail(struct growable *g)
+{
+  return g->base + g->tail;
+}
 
 /* Append NULL to DEST. */
 static void
 append_null (struct growable *dest)
 {
   GROW (dest, 1);
-  *TAIL (dest) = 0;
+  *tail (dest) = 0;
 }
 
 /* Append CH to DEST. */
@@ -1356,7 +1358,7 @@ append_char (char ch, struct growable *dest)
   if (ch)
     {
       GROW (dest, 1);
-      *TAIL (dest) = ch;
+      *tail (dest) = ch;
       TAIL_INCR (dest, 1);
     }
 
@@ -1372,7 +1374,7 @@ append_string (const char *str, struct growable *dest)
   if (l)
     {
       GROW (dest, l);
-      memcpy (TAIL (dest), str, l);
+      memcpy (tail (dest), str, l);
       TAIL_INCR (dest, l);
     }
 
@@ -1553,11 +1555,11 @@ append_uri_pathel (const char *b, const char *e, bool escaped,
     {
       /* If there's nothing to quote, we can simply append the string
          without processing it again.  */
-      memcpy (TAIL (dest), b, outlen);
+      memcpy (tail (dest), b, outlen);
     }
   else
     {
-      char *q = TAIL (dest);
+      char *q = tail (dest);
       int i;
 
       for (i = 0, p = b; p < e; p++)
@@ -1580,7 +1582,7 @@ append_uri_pathel (const char *b, const char *e, bool escaped,
 	      i += 3;
             }
         }
-      assert (q - TAIL (dest) <= outlen);
+      assert (q - tail (dest) <= outlen);
     }
 
   /* Perform inline case transformation if required.  */
@@ -1588,7 +1590,7 @@ append_uri_pathel (const char *b, const char *e, bool escaped,
       || opt.restrict_files_case == restrict_uppercase)
     {
       char *q;
-      for (q = TAIL (dest); q < TAIL (dest) + outlen; ++q)
+      for (q = tail (dest); q < tail (dest) + outlen; ++q)
         {
           if (opt.restrict_files_case == restrict_lowercase)
             *q = c_tolower (*q);
