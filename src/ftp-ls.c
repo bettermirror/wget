@@ -1059,26 +1059,14 @@ Unsupported listing type, trying Unix listing parser.\n"));
 /* The function creates an HTML index containing references to given
    directories and files on the appropriate host.  The references are
    FTP.  */
-uerr_t
-ftp_index (const char *file, struct url *u, struct fileinfo *f)
+static uerr_t
+ftp_index_fp (FILE *fp, struct url *u, struct fileinfo *f)
 {
-  FILE *fp;
   char *upwd;
   char *htcldir;                /* HTML-clean dir name */
   char *htclfile;               /* HTML-clean file name */
   char *urlclfile;              /* URL-clean file name */
 
-  if (!output_stream)
-    {
-      fp = fopen (file, "wb");
-      if (!fp)
-        {
-          logprintf (LOG_NOTQUIET, "%s: %s\n", file, strerror (errno));
-          return FOPENERR;
-        }
-    }
-  else
-    fp = output_stream;
   if (u->user)
     {
       char *tmpu, *tmpp;        /* temporary, clean user and passwd */
@@ -1173,9 +1161,34 @@ ftp_index (const char *file, struct url *u, struct fileinfo *f)
   fprintf (fp, "</pre>\n</body>\n</html>\n");
   xfree (htcldir);
   xfree (upwd);
-  if (!output_stream)
-    fclose (fp);
-  else
-    fflush (fp);
+
   return FTPOK;
+}
+
+/* The function creates an HTML index containing references to given
+   directories and files on the appropriate host.  The references are
+   FTP.  */
+uerr_t
+ftp_index (const char *file, struct url *u, struct fileinfo *f)
+{
+  uerr_t ret;
+
+  if (!output_stream)
+    {
+      FILE *fp = fopen (file, "wb");
+      if (!fp)
+        {
+          logprintf (LOG_NOTQUIET, "%s: %s\n", file, strerror (errno));
+          return FOPENERR;
+        }
+      ret = ftp_index_fp (fp, u, f);
+      fclose (fp);
+    }
+  else
+    {
+      ret = ftp_index_fp (output_stream, u, f);
+	  fflush (output_stream);
+    }
+
+  return ret;
 }
