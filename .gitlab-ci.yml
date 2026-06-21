@@ -221,8 +221,6 @@ CentOS9:
             - wget-*/fuzz/*.log
             - wget-*/tests/*.log
             - wget-*/testenv/*.log
-    # The test suite is currently broken, so a temporary allowance
-    allow_failure: true
 
 TLS/OpenSSL:
     stage: test-from-tarball
