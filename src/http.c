@@ -481,7 +481,7 @@ body_file_send (int sock, const char *file_name, wgint promised_size, FILE *warc
   fp = fopen (file_name, "rb");
   if (!fp)
     return -1;
-  while (!feof (fp) && written < promised_size)
+  while (!feof (fp) && !ferror (fp) && written < promised_size)
     {
       int towrite;
       int length = fread (chunk, 1, sizeof (chunk), fp);
