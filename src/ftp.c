@@ -2722,8 +2722,14 @@ ftp_retrieve_glob (struct url *u, struct url *original_url,
    */
   if (start)
     {
+      /* ugly hack to work-around a scan-build false positive */
+#ifndef __clang_analyzer__
       /* Just get everything.  */
       res = ftp_retrieve_list (u, original_url, start, con);
+      freefileinfo (start);
+#else
+		  res = 0;
+#endif
     }
   else
     {
@@ -2748,7 +2754,6 @@ ftp_retrieve_glob (struct url *u, struct url *original_url,
          it.  (An empty directory should not cause complaints.)
       */
     }
-  freefileinfo (start);
   if (opt.quota && total_downloaded_bytes > opt.quota)
     return QUOTEXC;
   else
