@@ -899,7 +899,8 @@ fd_transport_context (int fd)
   static unsigned int last_tick;                                        \
   if (!transport_map)                                                   \
     info = NULL;                                                        \
-  else if (last_fd == fd && last_tick == transport_map_modified_tick)   \
+  else if (last_fd != -1 &&                                             \
+           last_fd == fd && last_tick == transport_map_modified_tick)   \
     info = last_info;                                                   \
   else                                                                  \
     {                                                                   \
