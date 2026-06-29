@@ -147,7 +147,7 @@ Minimal:
 
 Debian-OldStable:
     stage: test-from-tarball
-    image: $CI_BASE_PATH/debian:oldstable
+    image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$DEBIAN_OLDSTABLE_BUILD
     variables:
         GIT_STRATEGY: none
     script:
@@ -173,7 +173,7 @@ Debian-OldStable:
 
 Debian-Stable:
     stage: test-from-tarball
-    image: $CI_BASE_PATH/debian:stable
+    image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$DEBIAN_STABLE_BUILD
     variables:
         GIT_STRATEGY: none
     script:
@@ -401,13 +401,13 @@ MinGW64:
 # Build from git should work on Arch.
 ArchLinux:
     stage: test-from-git
-    image: $CI_BASE_PATH/archlinux
+    image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$ARCH_BUILD
     script:
         - export CFLAGS="$CFLAGS_DEFAULT"
         - ./bootstrap
         - autoreconf -fi
         - touch .manywarnings
-        - ./configure $CONFIGURE_BASE_FLAGS
+        - ./configure $CONFIGURE_BASE_FLAGS --disable-ntlm
         - make -j$(nproc)
         - make check -j$(nproc)
     except:
