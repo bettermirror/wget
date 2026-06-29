@@ -36,6 +36,7 @@ as that of the covered work.  */
 #include <unistd.h>
 #include <errno.h>
 #include <assert.h>
+#include <intprops.h>
 #include "convert.h"
 #include "url.h"
 #include "recur.h"
@@ -1178,21 +1179,37 @@ html_quote_string (const char *s)
 {
   const char *b = s;
   char *p, *res;
-  int i;
+  size_t i;
+  int ok;
 
   /* Pass through the string, and count the new size.  */
-  for (i = 0; *s; s++, i++)
+  for (i = 0; *s; s++)
     {
       if (*s == '&')
-        i += 4;                 /* `amp;' */
+        ok = INT_ADD_OK (i, 4, &i);     /* `amp;' */
       else if (*s == '<' || *s == '>')
-        i += 3;                 /* `lt;' and `gt;' */
+        ok = INT_ADD_OK (i, 3, &i);     /* `lt;' and `gt;' */
       else if (*s == '\"')
-        i += 5;                 /* `quot;' */
+        ok = INT_ADD_OK (i, 5, &i);     /* `quot;' */
       else if (*s == ' ')
-        i += 4;                 /* #32; */
+        ok = INT_ADD_OK (i, 4, &i);     /* #32; */
+      else
+        ok = INT_ADD_OK (i, 1, &i);
+
+      if (!ok)
+        {
+          DEBUGP (("Overflow detected in html_quote_string().\n"));
+          abort();
+        }
     }
-  res = xmalloc (i + 1);
+
+  if (!INT_ADD_OK (i, 1, &i))
+    {
+      DEBUGP (("Overflow detected in html_quote_string().\n"));
+      abort();
+    }
+
+  res = xmalloc (i);
   s = b;
   for (p = res; *s; s++)
     {
