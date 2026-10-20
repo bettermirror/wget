@@ -1,0 +1,70 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use WgetFeature qw(opie);
+use FTPTest;
+
+# Regression test for CVE-2026-16599.
+#
+# When logging in to an FTP server that advertises OPIE / S-KEY, Wget
+# reads the S-KEY sequence number straight out of the server's 331
+# challenge line and feeds it to skey_response() as an MD5 iteration
+# count.  A malicious server could return an arbitrarily large sequence
+# (up to ~2.1 billion), forcing Wget to perform that many MD5 rounds
+# before it could even send the password -- a server-controlled denial
+# of service.
+#
+# ftp_login() now caps the sequence at 9999 while parsing the challenge;
+# a larger value makes it return FTPLOGREFUSED immediately, without ever
+# calling skey_response().  The login attempt then fails and nothing is
+# downloaded.
+#
+# The server below answers USER with "331 opiekey 100000 ..." (100000 >
+# 9999).  With the bound in place login is refused up front, so the test
+# stays offline and fast; it never drives the long MD5 loop.  Asserting
+# the refusal (failed exit code, no file downloaded) is what separates a
+# fixed Wget from a vulnerable one: a vulnerable Wget instead accepts the
+# sequence, runs the loop, sends PASS and downloads the file.
+
+###############################################################################
+
+my $afile = <<EOF;
+Some text.
+EOF
+
+$afile =~ s/\n/\r\n/g;
+
+# code, msg, headers, content
+my %urls = (
+    '/afile.txt' => {
+        content => $afile,
+    },
+);
+
+my $cmdline = $WgetTest::WGETPATH . " --tries=1 ftp://localhost:{{port}}/afile.txt";
+
+# With the fix, ftp_login() rejects the over-bound OPIE sequence before
+# sending PASS, so the login fails and nothing is downloaded.  Wget exits
+# 4 (WGET_EXIT_NETWORK_FAIL) once the single attempt is exhausted; --tries=1
+# keeps that deterministic.  A vulnerable binary instead accepts the
+# sequence and drives skey_response()'s MD5 loop, sending PASS afterwards.
+my $expected_error_code = 4;
+
+# Login is refused before any transfer, so nothing must be downloaded.
+my %expected_downloaded_files = ();
+
+###############################################################################
+
+my $the_test = FTPTest->new (
+                             # opie_sequence triggers a crafted OPIE
+                             # challenge with an over-bound sequence.
+                             server_behavior => {opie_sequence => 100000},
+                             input => \%urls,
+                             cmdline => $cmdline,
+                             errcode => $expected_error_code,
+                             output => \%expected_downloaded_files);
+exit $the_test->run();
+
+# vim: et ts=4 sw=4

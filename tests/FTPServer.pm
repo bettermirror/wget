@@ -748,6 +748,21 @@ sub run
                     next;
                 }
 
+                # Reply to USER with a crafted OPIE / S-KEY challenge
+                # carrying a caller-chosen sequence number.  Used by
+                # Test-ftp-opie-seq.px to exercise the CVE-2026-16599
+                # sequence bound in ftp_login().
+                if (defined($self->{_server_behavior}{opie_sequence})
+                    && $cmd eq 'USER')
+                {
+                    my $seq = $self->{_server_behavior}{opie_sequence};
+                    $conn->{username} = $rest;
+                    $conn->{state}    = $_connection_states{WAIT4PWD};
+                    print {$conn->{socket}}
+                      "331 opiekey $seq ab1234\r\n";
+                    next;
+                }
+
                 # Run the command.
                 &{$command_table->{$cmd}}($conn, $cmd, $rest);
             }
