@@ -763,6 +763,48 @@ sub run
                     next;
                 }
 
+                # Answer PASV with a 227 response that advertises an
+                # address different from the control connection's peer
+                # (127.0.0.1).  The passive data socket is bound to that
+                # same spoofed loopback address (127.0.0.2), so a Wget that
+                # trusts the server-supplied address connects to it and the
+                # transfer succeeds, while a Wget that validates the address
+                # refuses the response.  Used by
+                # Test-ftp-pasv-addr-mismatch.px to exercise the
+                # CVE-2026-15146 address check in ftp_pasv() (SSRF).
+                # This behavior was AI-generated (Kiro CLI).
+                if (defined($self->{_server_behavior}{pasv_spoof_addr})
+                    && $cmd eq 'PASV')
+                {
+                    my $spoofdot = $self->{_server_behavior}{pasv_spoof_addr};
+                    (my $spoofip = $spoofdot) =~ s/,/./g;
+                    "0" =~ /(0)/;  # IO::Socket::INET bug workaround.
+                    my $sock = IO::Socket::INET->new(
+                                     LocalHost => $spoofip,
+                                     LocalPort => '0',
+                                     Listen    => 1,
+                                     Reuse     => 1,
+                                     Proto     => 'tcp',
+                                     Type      => SOCK_STREAM
+                                    );
+                    unless ($sock)
+                    {
+                        print {$conn->{socket}}
+                          "550 Can't open a listening socket.\r\n";
+                        next;
+                    }
+                    $conn->{passive}        = 1;
+                    $conn->{passive_socket} = $sock;
+                    my $sockport = $sock->sockport;
+                    my $p1 = int($sockport / 256);
+                    my $p2 = $sockport % 256;
+                    $conn->{state} = $_connection_states{TWOSOCKS};
+                    # Advertise the spoofed address, not the real peer.
+                    print {$conn->{socket}}
+                      "227 Entering Passive Mode ($spoofdot,$p1,$p2)\r\n";
+                    next;
+                }
+
                 # Run the command.
                 &{$command_table->{$cmd}}($conn, $cmd, $rest);
             }

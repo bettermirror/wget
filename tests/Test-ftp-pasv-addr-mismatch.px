@@ -1,0 +1,77 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use FTPTest;
+
+# Regression test for CVE-2026-15146.
+#
+# When using passive mode, ftp_pasv() took the IP address and port out of
+# the server's 227 response and connected the data connection there,
+# without checking that the advertised address matched the peer of the
+# control connection.  A malicious or compromised FTP server could
+# therefore point Wget's data connection at an arbitrary host of its
+# choosing -- for example an internal service the attacker cannot reach
+# directly -- a server-side request forgery.
+#
+# ftp_pasv() now records the control connection's peer address and
+# rejects the 227 response (FTPINVPASV, "Cannot parse PASV response")
+# when the advertised address does not match it.  The data connection is
+# never opened to the spoofed host and the download fails.
+#
+# The server below opens a genuine passive socket but advertises it as
+# 127.0.0.2 in the 227 reply, while the control connection's peer is
+# 127.0.0.1.  With the address check in place Wget refuses the response,
+# so the transfer fails and nothing is downloaded.  A vulnerable Wget
+# instead trusts the spoofed address and tries to open the data
+# connection to 127.0.0.2.  Asserting the refusal (failed exit code, no
+# file downloaded) is what separates a fixed Wget from a vulnerable one.
+#
+
+###############################################################################
+
+my $afile = <<EOF;
+Some text.
+EOF
+
+$afile =~ s/\n/\r\n/g;
+
+# code, msg, headers, content
+my %urls = (
+    '/afile.txt' => {
+        content => $afile,
+    },
+);
+
+my $cmdline = $WgetTest::WGETPATH . " --tries=1 ftp://localhost:{{port}}/afile.txt";
+
+# The server opens its passive data socket on 127.0.0.2 and advertises
+# that same address in the 227 reply, while the control connection's peer
+# is 127.0.0.1.  With the fix, ftp_pasv() rejects the mismatched address
+# ("Cannot parse PASV response") before opening any data connection, so
+# the retrieval fails and Wget exits 4 (WGET_EXIT_NETWORK_FAIL) once the
+# single attempt is exhausted; --tries=1 keeps that deterministic.  A
+# vulnerable Wget instead trusts the spoofed address, connects to
+# 127.0.0.2 where the data socket really listens, and downloads the file
+# (exit 0) -- demonstrating the SSRF.
+my $expected_error_code = 4;
+
+# With the fix the PASV response is refused before any transfer, so
+# nothing is downloaded.  A vulnerable Wget would have written afile.txt.
+my %expected_downloaded_files = ();
+
+###############################################################################
+
+my $the_test = FTPTest->new (
+                             # pasv_spoof_addr makes the 227 PASV reply
+                             # advertise 127.0.0.2 instead of the real
+                             # control peer 127.0.0.1.
+                             server_behavior => {pasv_spoof_addr => '127,0,0,2'},
+                             input => \%urls,
+                             cmdline => $cmdline,
+                             errcode => $expected_error_code,
+                             output => \%expected_downloaded_files);
+exit $the_test->run();
+
+# vim: et ts=4 sw=4

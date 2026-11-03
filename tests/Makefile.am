@@ -56,6 +56,7 @@ PX_TESTS = \
              Test-ftp-dir.px \
              Test-ftp-pasv-fail.px \
              Test-ftp-opie-seq.px \
+             Test-ftp-pasv-addr-mismatch.px \
              Test-ftp-bad-list.px \
              Test-ftp-recursive.px \
              Test-ftp-iri.px \
